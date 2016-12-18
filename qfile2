@@ -1,0 +1,155 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+typedef struct Word Word;
+char tmpp[2048];
+struct Word
+{
+    int cnt;
+    char* item;
+    Word* next;
+};
+int Word_get(Word* Word, char* index);
+int Word_get_index(Word* Word, char* index);
+char * change_str(char *s1, char *s2, Word * head)
+{
+        char first[2048];
+        char tmp[2048];
+        char * p;
+        int i = Word_get_index(head, s2);
+        int j = Word_get(head, s2);
+        char last[2048];
+        strcpy(last, strstr(s1, s2) + strlen(s2));
+        strncpy(first, s1, strstr(s1,s2) - s1);
+	first[strstr(s1,s2) - s1] = '\0';
+        sprintf(tmp, "%s[%d,%d]%s", first, i, j, last);
+        p = tmp;
+        return p;
+}
+void Word_set(Word* Word, unsigned index, int item);
+Word* Word_add(Word* head, char* item)
+{
+    if (Word_get(head, item) == -1)
+    {
+        Word* new_item = (Word*)malloc(sizeof(Word));
+        new_item->item = item;
+        new_item->next = NULL;
+        new_item->cnt = 1;
+        if (head)
+        {
+            Word* Word;
+            for (Word = head; Word->next; Word = Word->next)
+                ;
+            Word->next = new_item;
+        }
+        else
+        {
+            head = new_item;
+        }
+    }
+    else
+    {
+        Word_set(head, Word_get(head, item), Word_get_index(head, item) + 1);
+    }
+    return head;
+}
+
+int Word_get_index(Word* Word, char* index)
+{
+    unsigned i;
+    for (i = 0; Word; Word = Word->next, i++)
+        if (strcmp(Word->item, index) == 0)
+            return Word->cnt;
+    return -1;
+}
+int Word_get(Word* Word, char* index)
+{
+    unsigned i;
+    for (i = 0; Word; Word = Word->next, i++)
+    {
+        if (strcmp(Word->item, index) == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+void Word_set(Word* Word, unsigned index, int item)
+{
+    unsigned i;
+    for (i = 0; Word; Word = Word->next, i++)
+        if (i == index)
+        {
+            Word->cnt = item;
+            return;
+        }
+}
+void Word_print(Word* Word)
+{
+    FILE *p =fopen("output.txt","w");
+	for (; Word; Word = Word->next)
+        fprintf(p,"%s %d->\n", Word->item, Word->cnt);
+    fprintf(p,"NULL\n");
+	fclose(p);
+}
+void Word_destroy(Word* Word)
+{
+    if (Word)
+    {
+        Word_destroy(Word->next);
+        free(Word);
+    }
+}
+int main()
+{
+    Word* Word = NULL;
+   int n, k = 0, i = 0;
+    char* t;
+	char* ttt = (char*)malloc(100*sizeof(int));
+    char tmp[1025];
+    FILE* p = fopen("input.txt", "r");
+    char** mas = (char**)malloc(1000 * sizeof(char*));
+    char** mas_copy = (char**)malloc(1000 * sizeof(char*));
+    for (n = 0; fgets(tmp, sizeof(tmp), p); n++)
+    {
+        int len = strlen(tmp);
+        mas[n] = (char*)malloc(len * sizeof(char*) +3);
+	strcpy(mas[n], tmp);
+	mas_copy[n] = (char*)malloc(len * sizeof(char*) +3);
+        strcpy(mas_copy[n], tmp);
+//	printf("%s\n", mas[n]);
+    }
+    fclose(p);
+   for (i = 0; i < n; i++)
+    {
+        t = strtok(mas_copy[i], " ,.-");
+        while (t != NULL)
+        {
+            if ((t[0] >= 'A') && (t[0] <= 'Z'))
+            {
+                Word = Word_add(Word, t);
+		
+		mas[i] = change_str(mas[i], t, Word);
+		//puts(mas[i]);		
+		k++;
+            }
+            t = strtok(NULL, " ,.-");
+        }
+//	printf("%s",mas[i]);
+    }
+    Word_print(Word);
+    p = fopen("output.txt", "a");
+     fprintf(p,"k = %d\n", k);
+	if (p != NULL)
+    {
+        for (i = 0; i < n; i++)
+        {
+            fprintf(p,"%s\n", mas[i]);
+        }
+        fclose(p);
+    }
+    free(mas);
+    free(mas_copy);
+    return 0;
+}
+
